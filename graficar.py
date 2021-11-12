@@ -133,3 +133,19 @@ RSI = dff["Open"]*0.8
 
 candlestick_Graph(dff, transacciones, RSI)
 
+def medias(df, *ciclos):
+    sma = []
+    for ciclo in ciclos:
+        if ciclo.find('SMA') != -1:
+            media = int(ciclo.split('_')[1][:-1])
+            sma.append(df["Close"].rolling(media).mean())
+
+    plt.figure()
+    for s in sma:
+        plt.plot(s)
+        plt.legend(ciclos)
+    plt.show()
+
+
+medias(dff, "SMA_15c",  "SMA_3C")
+
