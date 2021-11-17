@@ -1,4 +1,5 @@
 import settings
+import ejecutor
 import os
 import numpy as np
 import pandas as pd
@@ -18,38 +19,6 @@ inicio = settings.fecha_inicio
 metodo = settings.metodo
 desplazamiento = settings.desplazamiento
 
-## PRUEBA - BORRAR
-def ejecutar(escenario, bot, cripto):
-    print(f"------Simulacion1 con: {bot}---------")
-    contador = 0
-    for i in escenario:
-        if contador <5:
-            contador += 1
-            print(i["date"])
-
-def ejecutar2(escenario, bot, cripto):
-    print(f"------Simulacion2 con: {bot}---------")
-    contador = 0
-    for index, row in escenario.iterrows():
-        if contador <5:
-            contador += 1
-            print(row["date"])
-
-def ejecutar2(escenario, bot, cripto):
-    print(f"------Simulacion2 con: {bot}---------")
-    contador = 0
-    for index, row in escenario.iterrows():
-        if contador <5:
-            contador += 1
-            print(row["date"])
-
-def ejecutar3(escenario, bot, cripto):
-    print(f"------Simulacion2 con: {bot}---------")
-    contador = 0
-    for i in escenario.itertuples():
-        if contador <5:
-            contador += 1
-            print(i[1])
 
 def simular(cripto, fuente, n, dt, inicio, desplazamiento, metodo, *bots):
     '''
@@ -57,18 +26,20 @@ def simular(cripto, fuente, n, dt, inicio, desplazamiento, metodo, *bots):
     Genera escenarios de simulación y corre los ejecutores en cada uno
     Devuelve resultados en respectivos CSV
     '''
-    ## Creo un dataframe del archivo fuente y lo acoto segun metodo de simulacion
+    ## Creo un dataframe del archivo fuente
     df = pd.read_csv(fuente)
-    df = df.loc[::-1].reset_index(drop=True)
+    df = df.loc[::-1].reset_index(drop=True) # Lo doy vuelta
+    
+    ## Lo acoto segun metodo de simulacion para evitar errores de indexacion
     sub_df = df.copy()
     registros = n * dt * 24 * 60 if metodo == "cascada" else dt * 24 * 60
     sub_df.drop(df.tail(registros).index, inplace = True)
+    
+    ## Creo lista de dataframes acotados entre fechas, de acuerdo a metodo utilizado
     ultimo = len(sub_df.index)-2
     comienzo = random.randint(1, ultimo) if inicio == False or metodo == "spot" else df.index[df["date"] == inicio][0]
     escenarios_df = []
-    rango_fechas = []
-
-    ## Creo dataframes de los distintos escenarios
+    
     for i in range(n):
         if metodo == "spot":
             final = comienzo + registros
@@ -78,76 +49,38 @@ def simular(cripto, fuente, n, dt, inicio, desplazamiento, metodo, *bots):
             comienzo += desplazamiento * 24 * 60 if i > 0 else 0
             final = comienzo + registros    
         
-        escenario_df = df.loc[comienzo:final]
-        escenarios_df.append(escenario_df)
+        df_escenario = df.loc[comienzo:final]
+        escenarios_df.append(df_escenario)
 
         # Comprobacion de rango de fechas
-        fecha_comienzo = df["date"][comienzo]
-        fecha_final = df["date"][final]
-        #print(i+1, fecha_comienzo, fecha_final)
+        #fecha_comienzo = df["date"][comienzo]
+        #fecha_final = df["date"][final]
+        #print(f'Escenario {i+1}: ', [fecha_comienzo, fecha_final])
     
     #print(escenarios_df[-1])
 
-    ## Creacion de iterables
-
-    def generarIterador(df):
-        for i in range(len(df)):
-            yield df.iloc[i]
-
-    # iterable de iterables
-    ''' 
-    #escenarios_it = []
-    escenarios_it = map(generarIterador, escenarios_df)
-    #print(escenarios_it)
-    for i in escenarios_it:
-        print(i)
-    '''
-
-    # Lista de iterables
-    '''
-    escenarios_it = []
+    ## Creacion de lista de iterables
+    lista_iterable = []
     for i in escenarios_df:
-        escenarios_it.append(generarIterador(i))
+        iterable = escenarios_df['date'].to_numpy().tolist()
+        lista_iterable.append(iterable)
 
-    pprint(escenarios_it)
-    '''
-
-    ## Ejecución de los bots
-    
-    start = timer()
-    for i in escenarios_df:
-        for j in bots:
-            escenario = generarIterador(i)
-            ejecutar(escenario,j,cripto)
-            #print(f'ejecutor en escenario {escenarios_it.index(i)}, {j}')
-    
-    stop = timer()
-    time = stop-start
-    print("Tiempo estimado generando iteradores: ", time)
-    
-    '''
-    start = timer()
-    for i in escenarios_df:
-        for j in bots:
-            ejecutar2(i,j,cripto)
-            #print(f'ejecutor en escenario {escenarios_it.index(i)}, {j}')
-    
-    stop = timer()
-    time = stop-start
-    print("Tiempo estimado generando dataframe y iterrows: ", time)
-    '''
-    '''
-    start = timer()
-    for i in escenarios_df:
-        for j in bots:
-            ejecutar3(i,j,cripto)
-            #print(f'ejecutor en escenario {escenarios_it.index(i)}, {j}')
-    
-    
-    stop = timer()
-    time = stop-start
-    print("Tiempo estimado generando dataframe y itertuples: ", time)
-    '''
-
+    ## Ejecucion de las simulaciones
+    for i in lista_iterable:
+        for bot in bots:
+            ejecutor.ejecutar(iterable, bot, cripto)
+            #print(f'----- Ejecutor en escenario {escenarios_df.index(i)} con bot: ', {j} -----')
+            
     return print("Simulacion finalizada exitosamente =)")
+
+
+## Ejecucion de simulacro
+
+start = timer() 
+
 simular(cripto, fuente, n, dt, inicio, desplazamiento, metodo, *bots)
+
+stop = timer()
+time = stop-start
+print(f"Tiempo invertido en realizar {n * len(bots)} simulaciones, con el metodo {metodo}: ", time)
+

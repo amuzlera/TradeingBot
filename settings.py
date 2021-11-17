@@ -7,7 +7,7 @@ cripto = "BTC"
 fuente = f'{os.path.dirname(os.path.realpath(__file__))}\historial-{cripto}.csv'
 
 ## 3) Cantidad de escenarios en los que vamos a correr la simulación (Cant. de intervalos de tiempo)
-escenarios = 5
+escenarios = 1
 
 ## 4) Longitud del intervalo de tiempo (En dias)
 intervalo_tiempo = 30
