@@ -3,7 +3,9 @@ import config
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import os
 from matplotlib import gridspec
+
 
 
 # Esta funcion trae un DataFrame directo de binance, por el momento no se utiliza
@@ -60,7 +62,7 @@ def candlestickGraph(df, *args):
     '''
     Parameters
     ----------
-    df : Pandas.DataFrame
+    df : Pandas.DataFrame o String con ruta de csv
         Index = DateTime
         Columns Necesarias = "Open", "High", "Low", "Close"
     
@@ -77,6 +79,10 @@ def candlestickGraph(df, *args):
     de compra o venta
     
     '''
+    if type(df)== str:
+        archivo = df
+        fname = os.path.join(archivo)
+        df = pd.read_csv(fname, index_col=['date'], parse_dates=True)
     
     #Se toman los valores de mercado en variables sencillas para graficar las velas
     t = df.index
@@ -143,16 +149,18 @@ def candlestickGraph(df, *args):
     # Recorre toda la columna transacciones en busca de "Comprar" o "Vender"
     # Si encuentra un valor setea el color correspondiente, grafica una vline
     # y agrega una flecha a 45° indicando el precio
-    for i in df.index:
-        if df.loc[i]["transaccion"] in ["Comprar", "Vender"]:
-            if df.loc[i]["transaccion"] == "Vender":
-                colores = "r"
-            if df.loc[i]["transaccion"] == "Comprar":
-                colores = "g"
-            plt.axvline(i, color=colores,linestyle="-")
-            bbox_props = dict(boxstyle="rarrow", fc=(0.6, 0.7, 0.7, 0.5), ec=colores, lw=1)     # Define las propiedades de la flecha
-            plt.text(i, df.loc[i]["close"], f'{df.loc[i]["close"]}', color=colores,rotation=45, ha="right", va="top", size=8, bbox=bbox_props)
-
+    try:
+        for i in df.index:
+            if df.loc[i]["transaccion"] in ["Comprar", "Vender"]:
+                if df.loc[i]["transaccion"] == "Vender":
+                    colores = "r"
+                if df.loc[i]["transaccion"] == "Comprar":
+                    colores = "g"
+                plt.axvline(i, color=colores,linestyle="-")
+                bbox_props = dict(boxstyle="rarrow", fc=(0.6, 0.7, 0.7, 0.5), ec=colores, lw=1)     # Define las propiedades de la flecha
+                plt.text(i, df.loc[i]["close"], f'{df.loc[i]["close"]}', color=colores,rotation=45, ha="right", va="top", size=8, bbox=bbox_props)
+    except:
+        print("no hay transacciones registradas")
 
             
     plt.grid(alpha=0.2)
