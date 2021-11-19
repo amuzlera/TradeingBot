@@ -24,7 +24,7 @@ def getIndicadores():
     indicadores.BolingerBands(df_filtered)
     return df_filtered
 
-
+                            ### OJO ACA ANDY QUE ESTO SE DISPARA CUANDO LLAMO LA FUNCION DESDE EJECUTOR
 df=getIndicadores()
 df = df.iloc[::-1]
 
@@ -140,9 +140,9 @@ def analizador(row, bot):
     "Compra", "Venta" o "Holdear"
 
     '''
-    rsi = mirarRSI(i, bot)
-    bband= mirarBbands(i, bot)
-    ma = ma_cross(i, bot)
+    rsi = mirarRSI(row, bot)
+    bband= mirarBbands(row, bot)
+    ma = ma_cross(row, bot)
     if rsi == "Comprar" and bband == "Comprar" and ma == "Comprar":
         return "Comprar"
     elif rsi == "Vender" and bband == "Vender" and ma == "Vender":
