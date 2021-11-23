@@ -301,4 +301,53 @@ def BolingerBands(df, window_size=21, num_of_sd=2):
     df["bBandP_"+str(window_size)]=mean
     df["bBandUp_"+str(window_size)]=upper_band
     df["bBandDown_"+str(window_size)]=lower_band
+    return df
 
+
+def getIndicadores(inicio='2021-03-01 00:00:00', fin='2021-11-02 00:00:00', rsi=False, ma=[], bBand=[], file='Binance_BTCUSDT_d.csv'):
+    '''
+    Parameters
+    ----------
+    inicio : Str con fecha en formato YYYY-MM-DD, optional
+        DESCRIPTION. The default is '2021-03-01 00:00:00'.
+    fin : Str con fecha en formato YYYY-MM-DD, optional
+        DESCRIPTION. The default is '2021-11-02 00:00:00'.
+    rsi : int, optional
+        DESCRIPTION. Especifica el periodo del RSI. The default is False.
+    ma : list, optional
+        DESCRIPTION. Lista con el valor del periodo de cada media movil. The default is [].
+    bBand : list, optional
+        DESCRIPTION. Lista con 2 parametros, el primero fija el periodo, el segundo las desviaciones estandar. The default is [].
+    file : str, optional
+        DESCRIPTION. String con el nombre del archivo .csv con datos historicos del cual se quieran calcular indicadores.
+        The default is 'Binance_BTCUSDT_d.csv'.
+
+    Returns
+    -------
+    DataFrame con datos historicos mas indicadores
+    csv con datos historicos mas indicadores
+        DESCRIPTION.
+
+    '''
+    
+    #Levanta el dataframe.csv como serie temporal
+    archivo = 'Binance_BTCUSDT_d.csv'
+    fname = os.path.join(archivo)
+    df_raw = pd.read_csv(fname, index_col=['date'], parse_dates=True)
+    
+    #Filtrar por lapso de tiempo
+    df_timed = df_raw[inicio:fin]
+    
+    #Filtra por columnas de interés
+    columnasDeInteres = ['open', 'high', 'low', 'close']
+    #columnasDeInteres = ['close']
+    df_filtered = df_timed[columnasDeInteres]
+    if rsi:
+        df_filtered = RSI(df_filtered,cicles=rsi)
+    if ma:
+        for i in ma:
+            df_filtered = SMA(df_filtered,cicles=i)
+    if bBand:
+       BolingerBands(df_filtered, bBand[0], bBand[1])
+    df_filtered.to_csv("indicadores.csv")
+    return df_filtered.iloc[::-1]

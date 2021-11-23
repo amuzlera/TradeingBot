@@ -65,7 +65,10 @@ def candlestickGraph(df, *args):
     df : Pandas.DataFrame o String con ruta de csv
         Index = DateTime
         Columns Necesarias = "Open", "High", "Low", "Close"
-    
+    HistorialReal: str con ruta del archivo billetera.csv
+    Si se pasa la ruta se grafican las transacciones reales.
+    Si no por defaul, grafica cuando el criterio indica
+        
     args: Str o List
         -Si se pasa un string para una media movil, se busca una columna que
          contenga dicho string y se graficara junto con velas.
@@ -83,7 +86,7 @@ def candlestickGraph(df, *args):
         archivo = df
         fname = os.path.join(archivo)
         df = pd.read_csv(fname, index_col=['date'], parse_dates=True)
-    
+        
     #Se toman los valores de mercado en variables sencillas para graficar las velas
     t = df.index
     o = df["open"]
@@ -137,24 +140,34 @@ def candlestickGraph(df, *args):
     
     #Se revisan los parametros ingresados por *args y se grafican las medias y/o las bandas de bollinger
     # ES HORRIBLE este doble loop con 3 condicionales, hay q pensarlo 2 min y hacerlo lindo
+    operaciones = df.index
+
     for i in args:
         if "ma" in i:
             plt.plot(df[i], Label=i)
-            plt.text(df.index[-1], df[i][-1], i)
+            bbox_props = dict(boxstyle="square", fc=(0.6, 0.7, 0.7, 0.5), lw=1)     
+            plt.text(df.index[-1], df[i][-1], i,ha="left", va="center", size=9, bbox=bbox_props)
         if "bBand" in i:
             for z in df.columns:
                 if "bBand" in z:
                     plt.plot(df[z])
-    
+        if ".csv" in i:
+            fname = os.path.join(i)
+            transacciones = pd.read_csv(fname)
+            operaciones = pd.to_datetime(transacciones["Ultima modificacion"])
+        
+        
     # Recorre toda la columna transacciones en busca de "Comprar" o "Vender"
     # Si encuentra un valor setea el color correspondiente, grafica una vline
     # y agrega una flecha a 45° indicando el precio
+    
+        
     try:
-        for i in df.index:
-            if df.loc[i]["transaccion"] in ["Comprar", "Vender"]:
-                if df.loc[i]["transaccion"] == "Vender":
+        for i in operaciones:
+            if df.loc[i]["criterio"] in ["Comprar", "Vender"]:
+                if df.loc[i]["criterio"] == "Vender":
                     colores = "r"
-                if df.loc[i]["transaccion"] == "Comprar":
+                if df.loc[i]["criterio"] == "Comprar":
                     colores = "g"
                 plt.axvline(i, color=colores,linestyle="-")
                 bbox_props = dict(boxstyle="rarrow", fc=(0.6, 0.7, 0.7, 0.5), ec=colores, lw=1)     # Define las propiedades de la flecha

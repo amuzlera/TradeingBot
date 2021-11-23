@@ -25,8 +25,8 @@ def getIndicadores():
     return df_filtered
 
                             ### OJO ACA ANDY QUE ESTO SE DISPARA CUANDO LLAMO LA FUNCION DESDE EJECUTOR
-df=getIndicadores()
-df = df.iloc[::-1]
+#df=getIndicadores()
+#df = df.iloc[::-1]
 
 
 
@@ -61,9 +61,12 @@ def mirarRSI(row, bot):
     minimo = bot["RSI"][1]
     maximo = bot["RSI"][2]
 
-    if row[rsi] > maximo:
+# tuve que agregar un [0] adelante de row[rsi] porq me tira que sino es ambiguo. Esto lo repeti en todas las funciones
+# hay una incompatibilidad de formatos de como viene el row a como lo tenia pensado anteriorimente
+
+    if row[rsi][0] > maximo:
         return "Vender"
-    if row[rsi] < minimo:
+    if row[rsi][0] < minimo:
         return "Comprar"
 
 
@@ -96,9 +99,9 @@ def mirarBbands(row, bot):
     down = "bBandDown_"+ str(bot["bBands"][0])
    
     
-    if row["close"] > row[up]*(1-tolerancia):
+    if row["close"][0] > row[up][0]*(1-tolerancia):
         return "Vender"
-    if row["close"] < row[down]/(1-tolerancia):
+    if row["close"][0] < row[down][0]/(1-tolerancia):
         return "Comprar"
          
 def ma_cross(row, bot):
@@ -121,9 +124,9 @@ def ma_cross(row, bot):
     slow = "ma_" + str(bot["maCross"][1])
 
     
-    if row[slow]>row[fast]:
+    if row[slow][0]>row[fast][0]:
         return "Comprar"
-    if row[slow]<row[fast]:
+    if row[slow][0]<row[fast][0]:
         return "Vender"
          
 def analizador(row, bot):
@@ -151,30 +154,7 @@ def analizador(row, bot):
         return "Holdear"
     
 
-    
 
-if __name__=="__main__":
-    
-    bot = criterios.bot1
-    
-    
-    binance = generarIterador(df)
-    dff = pd.DataFrame()
-    
-    dff = dff.append(next(binance)) #Genero el primer valor, asi en el loop el primer ciclo tiene 2 valores. Sino tira error al calcular el ancho como x0-x1
-    for i in binance:
-        i["transaccion"] = analizador(i, bot)
-        dff = dff.append(i)
-    graficar.candlestickGraph(dff, "ma_15", "ma_30", ["RSI",20,80], "bBand")
-    #candlestickGraph(dff, "SMA_3c", "SMA_5c")    
-
-        
-        
-        
-        
-        
-        
-        
         
         
         
