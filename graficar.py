@@ -58,7 +58,7 @@ def getHistoric(crypto="ETHUSDT", kline=Client.KLINE_INTERVAL_1HOUR, periodo="1 
 
 
 
-def candlestickGraph(df, *args):
+def candlestickGraph(df, title="", *args):
     '''
     Parameters
     ----------
@@ -175,7 +175,9 @@ def candlestickGraph(df, *args):
     except:
         print("no hay transacciones registradas")
 
-            
+    plt.title(title, loc="center")
+   #plt.xlabel('xlabel', fontsize=18)
+    plt.ylabel('BTC/USDT', fontsize=12)
     plt.grid(alpha=0.2)
     plt.show()
 

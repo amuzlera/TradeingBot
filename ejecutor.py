@@ -7,35 +7,8 @@ import analizador
 import criterios
 import graficar
 import indicadores
-## -------------- PARAMETROS QUE LLEGARIAN DESDE SIMULADOR.PY: ---------------
 
-'''
-## Armo Dataframe del archivo fuente
-archivo = 'historial-BTC.csv'
-fname = os.path.join(archivo)
-df = pd.read_csv(fname)
-df = df.loc[::-1].reset_index(drop=True) # Doy vuelta el dataframe
-
-## Armo manualmente el periodo de estudio
-df = df.loc[1:60] # Acoto a una hora
-#df = df.loc[1:1440] # Acoto a un dia
-#df = df.loc[1:10080] # Acoto a una semana
-#df = df.loc[1:43200] # Acoto a un mes
-#df = df.loc[1:525960] # Acoto a un año            
-#df = df['date'].to_frame().head(10) # Algunos registros para prueba
-
-periodo = df['date'].to_numpy().tolist()
-inicio = periodo[0]
-fin = periodo[-1]
-
-# QUITAR - ES DE PRUEBA (SIMULA EL ANALIZADOR)
-def analizador(indicadores, criteriosBot):
-    lista = ["comprar", "vender", "holdear"]
-    return lista[random.randint(0, 1)]
-'''
-## ----------------------------------------------------------------------------
-
-def ejecutar(bot, cripto, monto_inicial):
+def ejecutar(bot, cripto, monto_inicial, inicio='2021-01-01 00:00:00', fin='2021-12-31 00:00:00', file='Binance_BTCUSDT_d.csv'):
     
     ## Obtengo el diccionario con los criterios del bot
     criterioBot = criterios.bots[bot]
@@ -46,7 +19,7 @@ def ejecutar(bot, cripto, monto_inicial):
     bBand = criterioBot["bBands"]
     
     ## Genero el CSV donde luego se consultaran los indicadores y valores de mercado
-    indicadores.getIndicadores(inicio='2021-01-01 00:00:00', fin='2021-12-31 00:00:00', rsi=rsi, ma=ma, bBand=bBand)
+    indicadores.getIndicadores(inicio, fin, rsi=rsi, ma=ma, bBand=bBand)
     ## Genero Dataframe desde el CSV de indicadores
     archivo = 'indicadores.csv'
     fname = os.path.join(archivo)
@@ -62,6 +35,7 @@ def ejecutar(bot, cripto, monto_inicial):
     #df = df[df['date'].between(inicio, fin)]  
     #df = df.iloc[1:periodo] # Acoto a una hora
     df = df.set_index('date')
+    df= df.iloc[0:-30]
     periodo = df.index
     
     ## Sumo nuevas columnas a ese Dataframe  (Esto podria no estar)
@@ -130,7 +104,7 @@ def ejecutar(bot, cripto, monto_inicial):
     raiz = os.path.dirname(os.path.realpath(__file__))       
     historia = f'historia-{bot}.csv' # corregir esta parte, no deberia estar hardcodeado
     transacciones = f'Transacciones-{cripto}.csv'
-    billetera = f'billetera.csv'
+    billetera = 'billetera.csv'
     
     csvs = [historia, transacciones, billetera]
     for csv in csvs:
@@ -142,12 +116,12 @@ def ejecutar(bot, cripto, monto_inicial):
     
     
 if __name__=="__main__":
-    bot = "bot1"
+    bot = "bot2"
     cripto = "BTC"
     monto_inicial = 1000
     
     start = timer()
-    ejecutar(bot, cripto, monto_inicial)
+    ejecutar(bot, cripto, monto_inicial,inicio='2021-01-01 00:00:00', fin='2021-12-02 00:00:00')
     stop = timer()
     time = stop-start
     print("Tiempo en recorrer: ", time)
@@ -155,9 +129,18 @@ if __name__=="__main__":
     criterioBot = criterios.bots[bot]
     archivo = f'ejecucion-{bot}/historia-{bot}.csv'
     fname = os.path.join(archivo)
-    graficar.candlestickGraph(fname, ["RSI", criterioBot["RSI"][1], criterioBot["RSI"][2] ], f'ejecucion-{bot}/billetera.csv', "bBands")
+    graficar.candlestickGraph(fname, f'{bot}', ["RSI", criterioBot["RSI"][1], criterioBot["RSI"][2] ], "bBands")
     
+#%%
     
+    graficar.candlestickGraph(fname, f'{bot}')
+
+    graficar.candlestickGraph(fname, f'{bot}', "bBands")
+
+    graficar.candlestickGraph(fname, f'{bot}', ["RSI", criterioBot["RSI"][1], criterioBot["RSI"][2] ], "bBands")
+    
+    graficar.candlestickGraph(fname, f'{bot}', ["RSI", criterioBot["RSI"][1], criterioBot["RSI"][2] ], "bBands", f'ejecucion-{bot}/billetera.csv')
+
     
     
     
